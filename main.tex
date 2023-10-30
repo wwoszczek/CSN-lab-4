@@ -1,16 +1,74 @@
 \documentclass{article}
 \usepackage{graphicx} % Required for inserting images
+\usepackage[labelfont=bf]{caption}
+\usepackage[sorting=none]{biblatex}
+\usepackage{amsmath}
+\usepackage{float}
+\addbibresource{bibliography.bib}
+\bibliography{bibliography.bib}
 
-\title{Non-linear regression on dependency trees}
-\author{Sara Montese \& Wojciech Woszczek}
-\date{October 2023}
+\title{Complex and Social Networks:\\
+Report 3}
+\author{Wojciech Woszczek \& Sara Montese} 
+\date{21/09/2023}
 
 \begin{document}
 
-\maketitle
+\begin{titlepage}
+    \begin{center}
+        \vspace*{1cm}
+            
+        \LARGE
+        \textbf{Complex and Social Networks\\
+Report 4\\
+Non-linear regression on dependency trees}
+            
+        \vspace{5.5cm}
+        \Large
+        \textbf{Sara Montese} \\
+        \textbf{Wojciech Woszczek} 
+        
+            
+        \vspace{0.8cm}
+            
+        \Large
+        UPC - FIB\\
+        08/11/2023
+            
+    \end{center}
+\end{titlepage}
+\clearpage
 
 \section{Introduction}
 \section{Results}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lccccc}
+\hline
+Language & $N$ & $\mu_n$ & $\sigma_n$ & $\mu_d$ & $\sigma_d$ \\
+\hline
+Arabic & 4108 & 26.957644 & 426.28740 & 2.165843 & 615.50117 \\
+Basque & 2933 & 11.335493 & 42.60344 & 1.961049 & 88.35827 \\
+Catalan & 15053 & 25.571713 & 185.45671 & 2.318647 & 541.19833 \\
+Chinese & 54238 & 6.248885 & 10.95861 & 1.444576 & 23.31552 \\
+Czech & 25037 & 16.427647 & 114.94749 & 2.019408 & 208.36291 \\
+English & 18779 & 24.046222 & 125.95388 & 3.050584 & 441.61804 \\
+Greek & 2951 & 22.820400 & 206.76883 & 2.201016 & 425.81964 \\
+Hungarian & 6424 & 21.659869 & 157.89069 & 3.877771 & 319.37238 \\
+Italian & 4144 & 18.406612 & 178.06560 & 1.971940 & 270.68870 \\
+Turkish & 6030 & 11.101658 & 68.57723 & 1.840803 & 86.43648 \\
+\hline
+\end{tabular}
+
+
+\caption{ Summary of the properties of the degree sequences. $N$ is the sample
+size (the number of sentences or dependency trees), $\mu_n$ and $\sigma_n$ are, respectively,
+the mean and the standard deviation of n, the sentence length (n is the number
+of vertices of a trees), $\mu_d$ and $\sigma_d$ are the mean and the standard deviation of
+the the mean length of edges}
+\label{pvals}
+\end{table}
 \section{Discussion}
 \section{Methods}
 \end{document}
