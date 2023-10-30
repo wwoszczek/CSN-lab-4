@@ -4,8 +4,9 @@ output: html_notebook
 #The mean length group. Its member will have to investigate the scaling of <d> as a function of n.
 ---
 
-
 ```{r}
+# DELETE IT BEFORE SENDING
+
 # Load and install necessary packages
 requiredPackages <-
    c("igraph",
@@ -26,10 +27,6 @@ rm(requiredPackages)
 
 # set pwd to current directory, must load rstudioapi before.
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-
-source("./summary_table.r")
-
-
 ```
 
 ```{r}
@@ -46,88 +43,172 @@ languages = c(
    "Turkish"
 )
 
-summary_tab = summary(languages)
-print(summary_tab)
+#summary_tab = summary(languages)
+#print(summary_tab)
+```
+
+# **SUMMARY TABLE**
+
+```{r}
+load_data <- function(language) {
+  # loading datas
+  df = read.table(
+      paste("./data/", language, "_dependency_tree_metrics.txt" , sep = ""),
+      header = FALSE
+  )
+  colnames(df) = c("vertex" , "k2" , "d")
+  
+  # Order the certices
+  return (df[order(df$vertex), ])
+}
 ```
 
 ```{r}
-
-```
-
-
-```{r}
-
-```
-
-```{r}
-
-```
-
-
-```{r}
-
+check_conditions <- function (df) {
+      for (i in length(df$vertex)) {
+        if (!((4 - 6 / df$vertex[i] <= df$k2[i]) &&
+               (df$k2[i] <= df$vertex[i] - 1) &&
+               (df$vertex[i] / (8 * (df$vertex[i] - 1)) * df$k2[i] + 0.5 <= df$d[i]) &&
+               (df$d[i] <= df$vertex[i] - 1))) {
+            return (FALSE)
+            break
+         }
+      }
+  return (TRUE)
+} 
 ```
 
 ```{r}
-
-```
-
-
-```{r}
-
-```
-
-```{r}
-
-```
+summary_table <- data.table(
+      "Language" = character(),
+      "N" = numeric(),
+      "mu_n" = numeric(),
+      "sigma_n" = numeric(),
+      "mu_x" = numeric(),
+      "sigma_x" = numeric()
+   )
 
 
-```{r}
+for (language in languages) {
+  print(language) 
+  
+  # loading datas
+  df = load_data(language)
+  
+  # check the conditions
+  conditions_satisfied <- check_conditions(df)
+  
+  if(conditions_satisfied) {
+    print("Metric satisfy validation conditions") }
+    else {
+      print("Metrics don't satisfy validation conditions")
+    }
 
-```
+  N = length(df$vertex)
+  mu_n = sum(df$vertex) / N #mean of n
+  sigma_n = 1 / N * sum((df$vertex - mu_n) ^ 2) #standard deviation of n 
+  mu_d = sum(df$d) / N #mean of <d>
+  sigma_d = 1 / N * sum((df$d - mu_n) ^ 2) #standard deviation of <d>
+  
+  summary_table <-rbind(summary_table,
+                  list(language, N, mu_n, sigma_n, mu_d, sigma_d))
 
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-```{r}
-
-```
-
-
-```{r}
-
+}
 ```
 
 ```{r}
-
+summary_table
 ```
 
+# PRELIMINARY PLOTS
 
 ```{r}
+#TODO REFACTOR!!!!!!!!!!!!!!!!!!
 
+get_results <- function(language_values, nonlinear_model, model_name) {
+        # get RSS, AIC and s
+        RSS = deviance(nonlinear_model)
+        AIC = AIC(nonlinear_model)
+        s = sqrt(RSS / df.residual(nonlinear_model)) #s : residual standard error
+        
+        # get coefficient
+        coeff =  coef(nonlinear_model)
+        
+        cat("RSS: ", RSS, "\nAIC: ", AIC, "\nS: ", s, "\ncoeff: ", coeff)
+        
+        # final plotting
+        plot(
+            log(language_values$vertex),
+            log(language_values$d) ,
+            xlab = "log(vertices)" ,
+            ylab = "log(<d>)",
+            main = model_name
+        )
+        lines(log(language_values$vertex), log(fitted(nonlinear_model)) , col = "green")
+        legend("topleft", legend=c("mean <d>", "Fitted model"), col=c("black", "green"), pch = c(1, NA), lwd = c(NA, 2))
+        
+        
+        return(list(
+            "RSS" = RSS,
+            "AIC" = AIC,
+            "S" = s,
+            "coeff" = coeff
+        ))
+        
+    }
 ```
 
 ```{r}
+#TODO mayve it is possible to generalize and put it inside the function?
 
+non_linear_models_fitting_and_plotting <- function (mean_df, model_formula, model_name) {
+        cat(model_name)
+        
+        lm1 = lm(log(degree_2nd_moment) ~ log(vertex) , mean_df)
+        b_initial_1 = coef(lm1)[2]
+        nonlinear_model = nls(
+            degree_2nd_moment ~ model_formula,
+            data = mean_df,
+            start = list(b = b_initial_1),
+            trace = TRUE
+        )
+        
+        model1 <-
+            get_results(mean_df,  nonlinear_model , model_name)
+}
 ```
 
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
-
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
-
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+```{r}
+for (language in languages) {
+  print(language) 
+  
+  df = load_data(language)
+  plot(df$vertex, df$d, xlab = "vertices", ylab = "mean dependency length", main=paste(language, "- preliminary plot <d>"))
+  
+  plot(log(df$vertex), log(df$d), xlab = "log(vertices)", ylab = "log(mean dependency length)", main = paste(language, "- preliminary plot log(<d>)"))
+  
+  mean_df = aggregate(df, list(df$vertex), mean)
+  
+  plot(mean_df$vertex, mean_df$d, xlab = "vertices", ylab = "mean <d>", main = paste(language, "- preliminary plot mean <d> (grouped by vertices)"))
+  plot(log(mean_df$vertex), log(mean_df$d), xlab = "log(vertices)", ylab = "log(mean <d>)", main = paste(language, "- preliminary plot log(mean <d>) (grouped by vertices)"))
+  
+  plot(log(df$vertex), log(df$d), xlab = "vertices", ylab = "mean dependency length", main = paste(language, "- Null model"))
+  lines(log(mean_df$vertex),log(mean_df$d), col = "green")
+  lines(log(mean_df$vertex),log((mean_df$vertex+1)/3), col = "red")
+  legend("topleft", legend=c("<d>", "mean <d>", "Null model"), col=c("black", "green", "red"), pch = c(1, NA, NA), lwd = c(NA, 2, 2))
+  
+  # ---- Model 1 ----
+  cat("\n----- Model 1 -----\n")
+  
+  lm1 = lm(log(d) ~ log(vertex) , mean_df)
+  
+  nl_model = nls(
+      d ~ (0.5) * vertex ^ b,
+      data = mean_df,
+      start = list(b = coef(lm1)[2]),
+      trace = TRUE
+  )
+  
+  model1 <- get_results(mean_df,  nl_model , "Model 1")
+}
+```
