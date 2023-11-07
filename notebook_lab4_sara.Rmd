@@ -142,47 +142,36 @@ for (language in languages) {
   # residuals <- residuals(nl_model)
   # # Create a scatterplot of residuals against 'vertex'
   # plot(df$vertex, residuals, xlab = "Vertex", ylab = "Residuals", main = language)
-  # abline(h = 0, col = "red")  # Add a horizontal line at y = 0 for reference
+  # abline(h = 0, col = "red")  # mAdd a horizontal line at y = 0 for reference
   # 
   
   
   df = check_conditions(load_data(language))
   mean_df = aggregate(df, list(df$vertex), mean)
   variance_df = aggregate(df, list(df$vertex), var)
-  variances = variance_df[!apply(variance_df[, 3:4] == 0, 1, FUN = any, na.rm = TRUE),] #remove zeros from dataframe
-  variances = na.omit(variances) #remove na values
+  variance_df[is.na(variance_df)] <- 0
+
+  #variances = variance_df[!apply(variance_df[, 3:4] == 0, 1, FUN = any, na.rm = TRUE),] #remove zeros from dataframe
+  #variances = na.omit(variances) #remove na values
         
   ################## calculate Fmax   #################
-  Fmax = max(variances$d) / min(variances$d)
-  deltaF = 0.05
+  #Fmax = max(variances$d) / min(variances$d)
+  #deltaF = 0.05
   # check if Fmax is close to 1
-  if (Fmax <= 1 + deltaF && Fmax >= 1 - deltaF) {
-    print("According to Fmax score, data set is homocesdastic")
-  } else{
-    print("According to Fmax score, data set is heterocesdastic")
+  #if (Fmax <= 1 + deltaF && Fmax >= 1 - deltaF) {
+   # print("According to Fmax score, data set is homocesdastic")
+  #} else{
+  #  print("According to Fmax score, data set is heterocesdastic")
   
-  }
+  #}
   #However, Fmax alone doesn't provide a definitive test for homoscedasticity (i.e. there's no specific threshold to be set)
   #To rigorously assess homoscedasticity, it's common to use residual plots (e.g., residuals vs. fitted values) and statistical tests like the Levene test or Bartlett's   test, which explicitly evaluate the equality of variances between groups.
      
   #check by visual inspection 
-    plot(variance_df$Group.1, variance_df$d, xlab = "Vertex", ylab = "Residuals", main = language)
-
-    
-  # par(mfrow = c(2, 2))  # Set up a multi-plot layout
-  # 
-  # for (i in 1:length(model_list)) {
-  #   model <- model_list[[i]]
-  #   residuals <- residuals_list[[i]]
-  #   plot(predict(model), residuals, main = paste(language, " - Model ", i), xlab = "Predicted Values", ylab = "Residuals")
-  # }
-  # 
-  # 
-  # 
-  # 
-  # 
-  #
-  # #################residuals plot for aggregate data  #################
+  plot(variance_df$Group.1, variance_df$d, xlab = "N. Vertex", ylab = "Variance", main = paste(language, " variance plot"))
+}
+  
+    # #################residuals plot for aggregate data  #################
   # linear_model_aggregate = lm(log(d) ~ log(vertex) , mean_df)
   # nl_model_aggregate = nls(
   #     d ~ ((0.5) * vertex) ^ b,
@@ -195,7 +184,6 @@ for (language in languages) {
   # abline(h = 0, col = "red")  # Add a horizontal line at y = 0 for reference
 
   
-}
 ```
 
 ```{r}
@@ -232,7 +220,7 @@ get_results <- function(language_values, nonlinear_model, model_name) {
         fitted_values <- fitted(nonlinear_model)
         
         # Apply a transformation to handle both positive and negative values
-        print(fitted_values)
+       # print(fitted_values)
         lines(log(language_values$vertex), log(fitted_values), col = "green")
         legend("topleft", legend=c("mean <d>", "Fitted model"), col=c("black", "green"), pch = c(1, NA), lwd = c(NA, 2))
         
@@ -351,10 +339,12 @@ s_table <- data.table(
 ```
 
 
+
+
 ```{r}
 for (language in languages) {
-  if (language == "Czech")
-   next
+#if (language == "Czech"){
+    #next
   
   cat("\n",language) 
   
@@ -417,46 +407,50 @@ for (language in languages) {
   # #initial_values_5 = list(a =  exp(coef(lm5)[1]), b = coef(lm5)[2], c = coef(lm5)[3])
   initial_values_5 = list(a =  1, b = 1, c = 0)
   results_5 <- c()
-  if (language == "Czech"){
-      #initial_values_5 = list(a =  2.76187e+92, b = 7.255974, c = -0.0504282) 
-      results_5 <- non_linear_models_fitting_and_plotting(mean_df, initial_values_5, model_formula = "a * (vertex^b) *exp(c*vertex)", model_name=" Model 5 - Generalized Power Law Model", max_iter = 1000, algorithm = "plinear")
-  }
-  else{
+  #if (language == "Czech"){
+  #results_5 <- non_linear_models_fitting_and_plotting(mean_df, initial_values_5, model_formula = "a*(vertex^b)*exp(c*vertex)", model_name=" Model 5 - Generalized Power Law Model", max_iter = 1000, algorithm = "port")
+  #}
+  #else{
     results_5 <- non_linear_models_fitting_and_plotting(mean_df, initial_values_5, model_formula = "a * (vertex^b) *exp(c*vertex)", model_name=" Model 5 - Generalized Power Law Model", max_iter = 1000, algorithm = "port")
-}
+#}
   
   ################ MODELS WITH ADDITIONAL PARAMETER d ###################
   #The warning messages tell us that in the process of searching for the minimum, the function encountered illegal values that caused it to return a value of NA, or missing. Apparently the algorithm then recovered from this.
   
    ################ Model 1+   #################
   #initial_values_1_plus <- list(b = coef(lm1)[2], d = 0)
-  initial_values_1_plus <- list(b = results_1$coeff, d=0)
-  results_1_plus <- non_linear_models_fitting_and_plotting(mean_df, initial_values_1_plus, model_formula = "((0.5) * vertex) ^ b + d", model_name="Model 1+", max_iter = 1000,  algorithm = "port", lower = 0.0, upper = 1)
+  initial_values_1_plus <- list(b = results_1$coeff, q=0)
+  results_1_plus <- non_linear_models_fitting_and_plotting(mean_df, initial_values_1_plus, model_formula = "((0.5) * vertex) ^ b + q", model_name="Model 1+", max_iter = 1000,  algorithm = "port", lower = 0.0, upper = 1)
 
  
   ################ Model 2+   #################
 #initial_values_2_plus <- list(a =  exp(coef(lm2)[1]), b = coef(lm2)[2], d = 0)
-  initial_values_2_plus <- list(a = results_2$coeff[1], b =  results_2$coeff[2], d = 0)
-results_2_plus <- non_linear_models_fitting_and_plotting(mean_df, initial_values_2_plus, model_formula = "a*(vertex^b) + d", model_name="Model 2+ - Power Law Model ", algorithm = "port", lower = 0.0, upper = 1.0)
+  initial_values_2_plus <- list(a = results_2$coeff['a'], b =  results_2$coeff['b'], q = 0)
+results_2_plus <- non_linear_models_fitting_and_plotting(mean_df, initial_values_2_plus, model_formula = "a*(vertex^b) + q", model_name="Model 2+ - Power Law Model ", algorithm = "port", lower = 0.0, upper = 1.0)
 
   ################ Model 3+  #################
-  #initial_values_3_plus <- list(a =  exp(coef(lm3)[1]), c = coef(lm3)[2], d =0)
-initial_values_3_plus <- list(a = results_3$coeff[1], c = results_3$coeff[2], d =0)
-  results_3_plus <- non_linear_models_fitting_and_plotting(mean_df, initial_values_3_plus, model_formula = "a*(exp(vertex*c)) + d", model_name="Model 3+ - Exponential Model", algorithm = "port",  lower = -10, upper = 10)
+initial_values_3_plus <- list(a = results_3$coeff['a'], c = results_3$coeff['c'], q =0)
+  results_3_plus <- non_linear_models_fitting_and_plotting(mean_df, initial_values_3_plus, model_formula = "a*(exp(vertex*c)) + q", model_name="Model 3+ - Exponential Model", algorithm = "port",  lower = -10, upper = 10)
 
   ################ Model 4+  #################
-  #initial_values_4_plus<-list(a = coef(lm4)[1], d = 0)
-  initial_values_4_plus<-list(a = results_4$coeff, d = 0)
-  results_4_plus <- non_linear_models_fitting_and_plotting(mean_df, initial_values_4_plus, model_formula = "a*log(vertex) + d", model_name=" Model 4+ - Logarithmic Model", algorithm = "port", lower = -10, upper = 10)
+  initial_values_4_plus<-list(a = results_4$coeff, q = 0)
+  results_4_plus <- non_linear_models_fitting_and_plotting(mean_df, initial_values_4_plus, model_formula = "a*log(vertex) + q", model_name=" Model 4+ - Logarithmic Model", algorithm = "port", lower = -10, upper = 10)
         
   
   ################ Model 5+  #################
-  initial_values_5_plus = list(a=results_5$coeff[1],
-                    b=results_5$coeff[2],
-                    c =results_5$coeff[3], d=0)
-  results_5_plus <- non_linear_models_fitting_and_plotting(mean_df, initial_values_5_plus, model_formula = "a * (vertex^b) *exp(c*vertex) + d", model_name=" Model 5+ - Generalized Power Law Model", algorithm = "port", lower = list(-10, -10, -10, 0), upper = 10)
+  initial_values_5_plus = list(a=results_5$coeff['a'],
+                    b=results_5$coeff['b'],
+                    c =results_5$coeff['c'], q=0)
+
+  results_5_plus <- c()
+  if (language == "Czech"){
+      results_5_plus <- non_linear_models_fitting_and_plotting(mean_df, initial_values_5_plus, model_formula = "a * (vertex^b) *exp(c*vertex) + q", model_name=" Model 5+ - Generalized Power Law Model", algorithm = "port")#, max_iter = 1000, lower = -100, upper = 10)
   
-  
+      }
+  else{
+    results_5_plus <- non_linear_models_fitting_and_plotting(mean_df, initial_values_5_plus, model_formula = "a * (vertex^b) *exp(c*vertex) + q", model_name=" Model 5+ - Generalized Power Law Model", algorithm = "port", lower = list(-10, -10, -10, 0), upper = 10)
+    
+  }
 
   
   
@@ -500,7 +494,6 @@ initial_values_3_plus <- list(a = results_3$coeff[1], c = results_3$coeff[2], d 
         minAIC <-
             min(
                 c(
-                    0,
                     model_0_AIC,
                     results_1$AIC,
                     results_2$AIC,
@@ -548,24 +541,23 @@ initial_values_3_plus <- list(a = results_3$coeff[1], c = results_3$coeff[2], d 
                     initial_values_5$b,
                     initial_values_5$c,
                     initial_values_1_plus$b,
-                    initial_values_1_plus$d,
+                    initial_values_1_plus$q,
                     initial_values_2_plus$a,
                     initial_values_2_plus$b,
-                    initial_values_2_plus$d,
+                    initial_values_2_plus$q,
                     initial_values_3_plus$a,
                     initial_values_3_plus$c,
-                    initial_values_3_plus$d,
+                    initial_values_3_plus$q,
                     initial_values_4_plus$a,
-                    initial_values_4_plus$d,
+                    initial_values_4_plus$q,
                     initial_values_5_plus$a,
                     initial_values_5_plus$b,
                     initial_values_5_plus$c,
-                    initial_values_5_plus$d
+                    initial_values_5_plus$q
                  
                 )
             )
         
-       
 }
 ```
 ```{r}
