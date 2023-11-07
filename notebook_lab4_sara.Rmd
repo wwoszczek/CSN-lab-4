@@ -151,24 +151,26 @@ for (language in languages) {
   variance_df = aggregate(df, list(df$vertex), var)
   variance_df[is.na(variance_df)] <- 0
 
-  #variances = variance_df[!apply(variance_df[, 3:4] == 0, 1, FUN = any, na.rm = TRUE),] #remove zeros from dataframe
-  #variances = na.omit(variances) #remove na values
-        
   ################## calculate Fmax   #################
-  #Fmax = max(variances$d) / min(variances$d)
-  #deltaF = 0.05
+  Fmax = max(variances$d) / min(variances$d)
+  deltaF = 0.5
   # check if Fmax is close to 1
-  #if (Fmax <= 1 + deltaF && Fmax >= 1 - deltaF) {
-   # print("According to Fmax score, data set is homocesdastic")
-  #} else{
-  #  print("According to Fmax score, data set is heterocesdastic")
-  
-  #}
+  if (Fmax <= 1 + deltaF && Fmax >= 1 - deltaF) {
+    print("According to Fmax score, data set is homocesdastic")
+  } else{
+    print("According to Fmax score, data set is heterocesdastic")
+  }
   #However, Fmax alone doesn't provide a definitive test for homoscedasticity (i.e. there's no specific threshold to be set)
   #To rigorously assess homoscedasticity, it's common to use residual plots (e.g., residuals vs. fitted values) and statistical tests like the Levene test or Bartlett's   test, which explicitly evaluate the equality of variances between groups.
      
   #check by visual inspection 
   plot(variance_df$Group.1, variance_df$d, xlab = "N. Vertex", ylab = "Variance", main = paste(language, " variance plot"))
+  
+  #check if, by using the aggregate, the data is homoscedastic.
+  variance_df_mean = aggregate(mean_df, list(mean_df$vertex), var)
+  variance_df_mean[is.na(variance_df_mean)] <- 0
+  plot(variance_df_mean$Group.1, variance_df_mean$d, xlab = "N. Vertex", ylab = "Variance of Mean", main = paste(language, " variance plot"))
+
 }
   
     # #################residuals plot for aggregate data  #################
@@ -448,13 +450,13 @@ for (language in languages) {
    ################ Model 1+   #################
   #initial_values_1_plus <- list(b = coef(lm1)[2], d = 0)
   initial_values_1_plus <- list(b = results_1$coeff, q=0)
-  results_1_plus <- non_linear_models_fitting_and_plotting(mean_df, initial_values_1_plus, model_formula = "((0.5) * vertex) ^ b + q", model_name="Model 1+", max_iter = 1000,  algorithm = "port", lower = 0.0, upper = 1)
+  results_1_plus <- non_linear_models_fitting_and_plotting(mean_df, initial_values_1_plus, model_formula = "((0.5) * vertex) ^ b + q", model_name="Model 1+", max_iter = 1000,  algorithm = "port", lower = -2, upper = 10.0)
 
  
   ################ Model 2+   #################
 #initial_values_2_plus <- list(a =  exp(coef(lm2)[1]), b = coef(lm2)[2], d = 0)
   initial_values_2_plus <- list(a = results_2$coeff['a'], b =  results_2$coeff['b'], q = 0)
-results_2_plus <- non_linear_models_fitting_and_plotting(mean_df, initial_values_2_plus, model_formula = "a*(vertex^b) + q", model_name="Model 2+ - Power Law Model ", algorithm = "port", lower = 0.0, upper = 1.0)
+results_2_plus <- non_linear_models_fitting_and_plotting(mean_df, initial_values_2_plus, model_formula = "a*(vertex^b) + q", model_name="Model 2+ - Power Law Model ", algorithm = "port", lower = -2, upper = 10.0)
 
   ################ Model 3+  #################
 initial_values_3_plus <- list(a = results_3$coeff['a'], c = results_3$coeff['c'], q =0)
@@ -641,5 +643,6 @@ kable(initial_values_table)
 
 ```{r}
 kable(final_values_table)
+#NOTE: Turkish language parameter 'a' is 10, so maybe we could set a higher upper bound.
         
 ```
