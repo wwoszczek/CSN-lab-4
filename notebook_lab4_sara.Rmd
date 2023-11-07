@@ -165,11 +165,12 @@ for (language in languages) {
      
   #check by visual inspection 
   plot(variance_df$Group.1, variance_df$d, xlab = "N. Vertex", ylab = "Variance", main = paste(language, " variance plot"))
-  
+  # is used in statistics to describe the process of creating a smooth curve that matches the data points in a scatterplot.
+  lines(lowess(variance_df$Group.1, variance_df$d), col="red")
   #check if, by using the aggregate, the data is homoscedastic.
-  variance_df_mean = aggregate(mean_df, list(mean_df$vertex), var)
-  variance_df_mean[is.na(variance_df_mean)] <- 0
-  plot(variance_df_mean$Group.1, variance_df_mean$d, xlab = "N. Vertex", ylab = "Variance of Mean", main = paste(language, " variance plot"))
+  #variance_df_mean = aggregate(mean_df, list(mean_df$vertex), var)
+  #variance_df_mean[is.na(variance_df_mean)] <- 0
+  #plot(variance_df_mean$Group.1, variance_df_mean$d, xlab = "N. Vertex", ylab = "Variance of Mean", main = paste(language, " variance plot"))
 
 }
   
@@ -434,9 +435,8 @@ for (language in languages) {
 
   ################ Model 5  #################
   lm5 = lm(log(d) ~ log(vertex) + vertex , mean_df)
-  # #initial_values_5 = list(a =  exp(coef(lm5)[1]), b = coef(lm5)[2], c = coef(lm5)[3])
-  initial_values_5 = list(a =  1, b = 1, c = 0)
-  results_5 <- c()
+  initial_values_5 = list(a =  exp(coef(lm5)[1]), b = coef(lm5)[2], c = coef(lm5)[3])
+  #initial_values_5 = list(a =  1, b = 1, c = 0)
   #if (language == "Czech"){
   #results_5 <- non_linear_models_fitting_and_plotting(mean_df, initial_values_5, model_formula = "a*(vertex^b)*exp(c*vertex)", model_name=" Model 5 - Generalized Power Law Model", max_iter = 1000, algorithm = "port")
   #}
