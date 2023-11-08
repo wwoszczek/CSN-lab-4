@@ -151,15 +151,7 @@ for (language in languages) {
   variance_df = aggregate(df, list(df$vertex), var)
   variance_df[is.na(variance_df)] <- 0
 
-  ################## calculate Fmax   #################
-  Fmax = max(variances$d) / min(variances$d)
-  deltaF = 0.5
-  # check if Fmax is close to 1
-  if (Fmax <= 1 + deltaF && Fmax >= 1 - deltaF) {
-    print("According to Fmax score, data set is homocesdastic")
-  } else{
-    print("According to Fmax score, data set is heterocesdastic")
-  }
+
   #However, Fmax alone doesn't provide a definitive test for homoscedasticity (i.e. there's no specific threshold to be set)
   #To rigorously assess homoscedasticity, it's common to use residual plots (e.g., residuals vs. fitted values) and statistical tests like the Levene test or Bartlett's   test, which explicitly evaluate the equality of variances between groups.
      
@@ -374,8 +366,6 @@ s_table <- data.table(
 
 ```{r}
 for (language in languages) {
-#if (language == "Czech"){
-    #next
   
   cat("\n",language) 
   
@@ -409,40 +399,36 @@ for (language in languages) {
   cat("\nS: ", model_0_s)
   cat("\n0 Parameters")
 
+  data <- mean_df
    ################ Model 1   #################
-  lm1 = lm(log(d) ~ log(vertex) , mean_df)
+  lm1 = lm(log(d) ~ log(vertex) , data)
   initial_values_1 <- list(b = coef(lm1)[2])
-  results_1 <- non_linear_models_fitting_and_plotting(mean_df, initial_values_1, model_formula = "((0.5) * vertex) ^ b", model_name="Model 1")
+  results_1 <- non_linear_models_fitting_and_plotting(data, initial_values_1, model_formula = "((0.5) * vertex) ^ b", model_name="Model 1")
 
 
   ################ Model 2   #################
-  lm2 = lm(log(d) ~ log(vertex) , mean_df)
+  lm2 = lm(log(d) ~ log(vertex) , data)
   initial_values_2 <- list(a =  exp(coef(lm2)[1]), b = coef(lm2)[2])
-  results_2 <- non_linear_models_fitting_and_plotting(mean_df, initial_values_2, model_formula = "a * (vertex^b)", model_name="Model 2 - Power Law Model ")
+  results_2 <- non_linear_models_fitting_and_plotting(data, initial_values_2, model_formula = "a * (vertex^b)", model_name="Model 2 - Power Law Model ")
 
 
   ################ Model 3  #################
-  lm3 = lm(log(d) ~ vertex , mean_df)
+  lm3 = lm(log(d) ~ vertex , data)
   initial_values_3 <- list(a =  exp(coef(lm3)[1]), c = coef(lm3)[2])
-  results_3 <- non_linear_models_fitting_and_plotting(mean_df, initial_values_3, model_formula = "a*(exp(vertex*c))", model_name="Model 3 - Exponential Model")
+  results_3 <- non_linear_models_fitting_and_plotting(data, initial_values_3, model_formula = "a*(exp(vertex*c))", model_name="Model 3 - Exponential Model")
 
 
   ################ Model 4  #################
-  lm4 = lm(d ~ log(vertex) , mean_df)
+  lm4 = lm(d ~ log(vertex) , data)
   initial_values_4<-list(a = coef(lm4)[1] )
-  results_4 <- non_linear_models_fitting_and_plotting(mean_df, initial_values_4, model_formula = "a*log(vertex)", model_name=" Model 4 - Logarithmic Model")
+  results_4 <- non_linear_models_fitting_and_plotting(data, initial_values_4, model_formula = "a*log(vertex)", model_name=" Model 4 - Logarithmic Model")
 
 
   ################ Model 5  #################
-  lm5 = lm(log(d) ~ log(vertex) + vertex , mean_df)
+  lm5 = lm(log(d) ~ log(vertex) + vertex , data)
   initial_values_5 = list(a =  exp(coef(lm5)[1]), b = coef(lm5)[2], c = coef(lm5)[3])
-  #initial_values_5 = list(a =  1, b = 1, c = 0)
-  #if (language == "Czech"){
-  #results_5 <- non_linear_models_fitting_and_plotting(mean_df, initial_values_5, model_formula = "a*(vertex^b)*exp(c*vertex)", model_name=" Model 5 - Generalized Power Law Model", max_iter = 1000, algorithm = "port")
-  #}
-  #else{
-    results_5 <- non_linear_models_fitting_and_plotting(mean_df, initial_values_5, model_formula = "a * (vertex^b) *exp(c*vertex)", model_name=" Model 5 - Generalized Power Law Model", max_iter = 1000, algorithm = "port")
-#}
+  results_5 <- non_linear_models_fitting_and_plotting(data, initial_values_5, model_formula = "a * (vertex^b) *exp(c*vertex)", model_name=" Model 5 - Generalized Power Law Model", max_iter = 1000, algorithm = "port")
+
   
   ################ MODELS WITH ADDITIONAL PARAMETER d ###################
   #The warning messages tell us that in the process of searching for the minimum, the function encountered illegal values that caused it to return a value of NA, or missing. Apparently the algorithm then recovered from this.
@@ -450,21 +436,21 @@ for (language in languages) {
    ################ Model 1+   #################
   #initial_values_1_plus <- list(b = coef(lm1)[2], d = 0)
   initial_values_1_plus <- list(b = results_1$coeff, q=0)
-  results_1_plus <- non_linear_models_fitting_and_plotting(mean_df, initial_values_1_plus, model_formula = "((0.5) * vertex) ^ b + q", model_name="Model 1+", max_iter = 1000,  algorithm = "port", lower = -2, upper = 10.0)
+  results_1_plus <- non_linear_models_fitting_and_plotting(data, initial_values_1_plus, model_formula = "((0.5) * vertex) ^ b + q", model_name="Model 1+", max_iter = 1000,  algorithm = "port")#, lower = -2, upper = 10.0)
 
  
   ################ Model 2+   #################
 #initial_values_2_plus <- list(a =  exp(coef(lm2)[1]), b = coef(lm2)[2], d = 0)
   initial_values_2_plus <- list(a = results_2$coeff['a'], b =  results_2$coeff['b'], q = 0)
-results_2_plus <- non_linear_models_fitting_and_plotting(mean_df, initial_values_2_plus, model_formula = "a*(vertex^b) + q", model_name="Model 2+ - Power Law Model ", algorithm = "port", lower = -2, upper = 10.0)
+results_2_plus <- non_linear_models_fitting_and_plotting(data, initial_values_2_plus, model_formula = "a*(vertex^b) + q", model_name="Model 2+ - Power Law Model ", algorithm = "port", lower = -2, upper = 10.0)
 
   ################ Model 3+  #################
 initial_values_3_plus <- list(a = results_3$coeff['a'], c = results_3$coeff['c'], q =0)
-  results_3_plus <- non_linear_models_fitting_and_plotting(mean_df, initial_values_3_plus, model_formula = "a*(exp(vertex*c)) + q", model_name="Model 3+ - Exponential Model", algorithm = "port",  lower = -10, upper = 10)
+  results_3_plus <- non_linear_models_fitting_and_plotting(data, initial_values_3_plus, model_formula = "a*(exp(vertex*c)) + q", model_name="Model 3+ - Exponential Model", algorithm = "port",  lower = -10, upper = 10)
 
   ################ Model 4+  #################
   initial_values_4_plus<-list(a = results_4$coeff, q = 0)
-  results_4_plus <- non_linear_models_fitting_and_plotting(mean_df, initial_values_4_plus, model_formula = "a*log(vertex) + q", model_name=" Model 4+ - Logarithmic Model", algorithm = "port", lower = -10, upper = 10)
+  results_4_plus <- non_linear_models_fitting_and_plotting(data, initial_values_4_plus, model_formula = "a*log(vertex) + q", model_name=" Model 4+ - Logarithmic Model", algorithm = "port")#, lower = -10, upper = 10)
         
   
   ################ Model 5+  #################
@@ -472,15 +458,8 @@ initial_values_3_plus <- list(a = results_3$coeff['a'], c = results_3$coeff['c']
                     b=results_5$coeff['b'],
                     c =results_5$coeff['c'], q=0)
 
-  results_5_plus <- c()
-  if (language == "Czech"){
-      results_5_plus <- non_linear_models_fitting_and_plotting(mean_df, initial_values_5_plus, model_formula = "a * (vertex^b) *exp(c*vertex) + q", model_name=" Model 5+ - Generalized Power Law Model", algorithm = "port")#, max_iter = 1000, lower = -100, upper = 10)
-  
-      }
-  else{
-    results_5_plus <- non_linear_models_fitting_and_plotting(mean_df, initial_values_5_plus, model_formula = "a * (vertex^b) *exp(c*vertex) + q", model_name=" Model 5+ - Generalized Power Law Model", algorithm = "port", lower = list(-10, -10, -10, 0), upper = 10)
+  results_5_plus <- non_linear_models_fitting_and_plotting(data, initial_values_5_plus, model_formula = "a * (vertex^b) *exp(c*vertex) + q", model_name=" Model 5+ - Generalized Power Law Model", algorithm = "port", lower = -5, upper = 5)# list(-10, -10, -10, 0), upper = 10)
     
-  }
 
   
   
@@ -558,7 +537,7 @@ initial_values_3_plus <- list(a = results_3$coeff['a'], c = results_3$coeff['c']
             )
         initial_values_table <-
             rbind(
-                values_table,
+                initial_values_table,
                 list(
                     language,
                     initial_values_1$b,
@@ -590,7 +569,7 @@ initial_values_3_plus <- list(a = results_3$coeff['a'], c = results_3$coeff['c']
         
         final_values_table <-
             rbind(
-                values_table,
+                final_values_table,
                 list(
                     language,
                     results_1$coeff['b'],
